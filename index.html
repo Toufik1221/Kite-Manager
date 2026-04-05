@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Kite Manager Pro v3 | Complete Hotel HR System</title>
+    <title>Kite Manager Pro v4 | Complete Hotel HR System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -101,7 +101,9 @@
         .modal-content { background: white; border-radius: 32px; padding: 30px; max-width: 700px; width: 90%; max-height: 85vh; overflow: auto; }
         body.dark .modal-content { background: #1e293b; }
         .profile-header { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
-        .edit-mode input, .edit-mode select { margin: 5px 0; }
+        .history-table { font-size: 13px; margin-top: 15px; }
+        .history-table th, .history-table td { padding: 8px; }
+        .settings-group { background: var(--light); padding: 15px; border-radius: 20px; margin-bottom: 20px; }
         @media (max-width: 768px) { .sidebar { width: 70px; } .sidebar span { display: none; } .main-content { margin-left: 70px; } }
     </style>
 </head>
@@ -109,7 +111,7 @@
 <div id="loginOverlay">
     <div class="login-card">
         <i class="fas fa-umbrella" style="font-size: 55px; color: var(--secondary);"></i>
-        <h2>Kite Manager Pro v3</h2>
+        <h2>Kite Manager Pro v4</h2>
         <p>Enterprise Hotel HR Suite</p>
         <input type="text" id="loginUser" placeholder="Username" value="admin">
         <input type="password" id="loginPass" placeholder="Password" value="1234">
@@ -119,14 +121,14 @@
 
 <div class="app" id="app">
     <div class="sidebar">
-        <div class="logo"><i class="fas fa-hotel"></i><h2>Kite Manager</h2><p style="font-size:10px;">Pro v3.0</p></div>
+        <div class="logo"><i class="fas fa-hotel"></i><h2>Kite Manager</h2><p style="font-size:10px;">Pro v4.0</p></div>
         <ul>
             <li data-page="dashboard" class="active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></li>
             <li data-page="attendance"><i class="fas fa-fingerprint"></i><span>Attendance</span></li>
             <li data-page="addEmployee"><i class="fas fa-user-plus"></i><span>Add Employee</span></li>
             <li data-page="employeeDirectory"><i class="fas fa-address-book"></i><span>Employee Directory</span></li>
             <li data-page="ledger"><i class="fas fa-book"></i><span>Salary Ledger</span></li>
-            <li data-page="shift"><i class="fas fa-clock"></i><span>Shift & Overtime</span></li>
+            <li data-page="overtime"><i class="fas fa-clock"></i><span>Overtime & Bonus</span></li>
             <li data-page="notice"><i class="fas fa-bullhorn"></i><span>Notice Board</span></li>
             <li data-page="departments"><i class="fas fa-building"></i><span>Departments</span></li>
             <li data-page="companyProfile"><i class="fas fa-store"></i><span>Company Profile</span></li>
@@ -149,9 +151,9 @@
                 <div id="attendanceEmployeeList" class="attendance-grid"></div>
                 <button id="saveAttendanceBtn"><i class="fas fa-save"></i> Save Attendance</button>
                 <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="downloadAttendanceSheetPDF" class="btn-success"><i class="fas fa-file-pdf"></i> Download Attendance Sheet (All)</button>
-                    <select id="deptWiseReportSelect" style="width: auto; display: inline-block;"><option value="">-- Select Department Wise PDF --</option></select>
-                    <button id="downloadDeptWiseAttendancePDF"><i class="fas fa-building"></i> Download Dept Wise PDF</button>
+                    <button id="downloadAttendanceSheetPDF" class="btn-success"><i class="fas fa-file-pdf"></i> Download Attendance Sheet</button>
+                    <select id="deptWiseReportSelect" style="width: auto; display: inline-block;"><option value="">-- Department Wise PDF --</option></select>
+                    <button id="downloadDeptWiseAttendancePDF"><i class="fas fa-building"></i> Download Dept PDF</button>
                 </div>
             </div>
         </div>
@@ -189,16 +191,40 @@
         </div>
 
         <div id="ledgerPage" class="page">
-            <div class="card"><h3>Salary Ledger (Advance + Payment)</h3><div id="ledgerTableContainer"></div><button id="downloadLedgerPDF"><i class="fas fa-download"></i> Download Ledger PDF</button></div>
+            <div class="card"><h3>Salary Ledger (Advance + Payment + Bonus + Overtime)</h3><div id="ledgerTableContainer"></div><button id="downloadLedgerPDF"><i class="fas fa-download"></i> Download Ledger PDF</button></div>
         </div>
 
-        <div id="shiftPage" class="page">
-            <div class="card"><h3>Shift & Overtime Management</h3>
-                <select id="shiftEmployee"><option value="">Select Employee</option></select>
-                <select id="shiftType"><option value="Morning">Morning (8am-4pm)</option><option value="Evening">Evening (4pm-12am)</option><option value="Night">Night (12am-8am)</option></select>
-                <input type="number" id="overtimeHours" placeholder="Overtime Hours (This Month)" value="0">
-                <button id="saveShiftBtn">Save Shift & Overtime</button>
-                <div id="shiftListContainer" style="margin-top:20px;"></div>
+        <div id="overtimePage" class="page">
+            <div class="card">
+                <h3><i class="fas fa-clock"></i> Overtime & Bonus Management</h3>
+                
+                <div class="settings-group">
+                    <h4>⚙️ Overtime Rate Settings</h4>
+                    <label>Overtime Rate (per hour in BDT):</label>
+                    <input type="number" id="overtimeRate" placeholder="e.g., 200 BDT per hour" value="200">
+                    <button id="saveOvertimeRateBtn" class="btn-sm">Save Rate</button>
+                </div>
+
+                <div class="settings-group">
+                    <h4>➕ Add Overtime for Employee</h4>
+                    <select id="otEmployeeSelect"><option value="">Select Employee</option></select>
+                    <input type="date" id="otDate">
+                    <input type="number" id="otHours" placeholder="Overtime Hours" step="0.5">
+                    <button id="addOvertimeBtn">Add Overtime & Update Ledger</button>
+                </div>
+
+                <div class="settings-group">
+                    <h4>🎁 Add Bonus for Employee</h4>
+                    <select id="bonusEmployeeSelect"><option value="">Select Employee</option></select>
+                    <input type="text" id="bonusReason" placeholder="Bonus Reason (e.g., Eid Bonus, Performance)">
+                    <input type="number" id="bonusAmount" placeholder="Bonus Amount (BDT)">
+                    <button id="addBonusBtn">Add Bonus & Update Ledger</button>
+                </div>
+
+                <div class="card">
+                    <h4>📋 Overtime History</h4>
+                    <div id="overtimeHistoryList"></div>
+                </div>
             </div>
         </div>
 
@@ -233,8 +259,10 @@
     let employees = [];
     let departments = ["Housekeeping", "Front Desk", "Kitchen", "Management"];
     let attendanceLog = [];
-    let salaryLedger = [];
-    let shifts = [];
+    let salaryLedger = []; // { empId, advance, paid, bonus, overtime, month }
+    let overtimeHistory = []; // { empId, date, hours, amount, addedToLedger }
+    let bonusHistory = []; // { empId, date, reason, amount, addedToLedger }
+    let overtimeRate = 200; // per hour
     let notices = [];
     let company = { name: "Sea Breeze Hotel", phone: "+880 1234 567890", address: "Cox's Bazar, Bangladesh", logo: "" };
     let currentViewEmployeeId = null;
@@ -248,7 +276,9 @@
         localStorage.setItem("kite_depts", JSON.stringify(departments));
         localStorage.setItem("kite_att", JSON.stringify(attendanceLog));
         localStorage.setItem("kite_ledger", JSON.stringify(salaryLedger));
-        localStorage.setItem("kite_shifts", JSON.stringify(shifts));
+        localStorage.setItem("kite_overtime_history", JSON.stringify(overtimeHistory));
+        localStorage.setItem("kite_bonus_history", JSON.stringify(bonusHistory));
+        localStorage.setItem("kite_overtime_rate", overtimeRate.toString());
         localStorage.setItem("kite_notices", JSON.stringify(notices));
         localStorage.setItem("kite_company", JSON.stringify(company));
     }
@@ -259,10 +289,33 @@
         if(localStorage.getItem("kite_depts")) departments = JSON.parse(localStorage.getItem("kite_depts"));
         if(localStorage.getItem("kite_att")) attendanceLog = JSON.parse(localStorage.getItem("kite_att"));
         if(localStorage.getItem("kite_ledger")) salaryLedger = JSON.parse(localStorage.getItem("kite_ledger"));
-        if(localStorage.getItem("kite_shifts")) shifts = JSON.parse(localStorage.getItem("kite_shifts"));
+        if(localStorage.getItem("kite_overtime_history")) overtimeHistory = JSON.parse(localStorage.getItem("kite_overtime_history"));
+        if(localStorage.getItem("kite_bonus_history")) bonusHistory = JSON.parse(localStorage.getItem("kite_bonus_history"));
+        if(localStorage.getItem("kite_overtime_rate")) overtimeRate = parseInt(localStorage.getItem("kite_overtime_rate"));
         if(localStorage.getItem("kite_notices")) notices = JSON.parse(localStorage.getItem("kite_notices"));
         if(localStorage.getItem("kite_company")) company = JSON.parse(localStorage.getItem("kite_company"));
-        if(!salaryLedger.length) employees.forEach(e=>salaryLedger.push({ empId: e.id, advance: 0, paid: 0, month: getCurrentMonth() }));
+        
+        // Initialize ledger for new employees
+        employees.forEach(emp => {
+            let existing = salaryLedger.find(l => l.empId === emp.id && l.month === getCurrentMonth());
+            if(!existing) {
+                salaryLedger.push({ empId: emp.id, advance: 0, paid: 0, bonus: 0, overtime: 0, month: getCurrentMonth() });
+            }
+        });
+        saveAll();
+    }
+    
+    function updateEmployeeLedger(empId, type, amount, reason = "") {
+        let currentMonth = getCurrentMonth();
+        let ledger = salaryLedger.find(l => l.empId === empId && l.month === currentMonth);
+        if(!ledger) {
+            ledger = { empId, advance: 0, paid: 0, bonus: 0, overtime: 0, month: currentMonth };
+            salaryLedger.push(ledger);
+        }
+        if(type === 'overtime') ledger.overtime = (ledger.overtime || 0) + amount;
+        if(type === 'bonus') ledger.bonus = (ledger.bonus || 0) + amount;
+        saveAll();
+        showToast(`${type === 'overtime' ? 'Overtime' : 'Bonus'} added: ${amount} BDT`);
     }
     
     function renderDashboard() {
@@ -270,12 +323,18 @@
         let today = getTodayStr();
         let presentToday = attendanceLog.filter(a=>a.date===today && a.status==='present').length;
         let totalSalary = employees.reduce((s,e)=>s+e.salary,0);
+        let totalOvertimeThisMonth = salaryLedger.filter(l=>l.month===getCurrentMonth()).reduce((s,l)=>s+(l.overtime||0),0);
+        let totalBonusThisMonth = salaryLedger.filter(l=>l.month===getCurrentMonth()).reduce((s,l)=>s+(l.bonus||0),0);
+        
         document.getElementById("dashboardStats").innerHTML = `
             <div class="stat-card"><i class="fas fa-users"></i><h2>${active}</h2><p>Total Staff</p></div>
             <div class="stat-card"><i class="fas fa-clock"></i><h2>${presentToday}</h2><p>Present Today</p></div>
             <div class="stat-card"><i class="fas fa-dollar-sign"></i><h2>${totalSalary.toLocaleString()} BDT</h2><p>Salary Pool</p></div>
             <div class="stat-card"><i class="fas fa-building"></i><h2>${departments.length}</h2><p>Departments</p></div>
+            <div class="stat-card"><i class="fas fa-clock"></i><h2>${totalOvertimeThisMonth.toLocaleString()}</h2><p>Total Overtime (BDT)</p></div>
+            <div class="stat-card"><i class="fas fa-gift"></i><h2>${totalBonusThisMonth.toLocaleString()}</h2><p>Total Bonus (BDT)</p></div>
         `;
+        
         let deptPresent = {};
         departments.forEach(d=>deptPresent[d]=0);
         attendanceLog.filter(a=>a.date===today && a.status==='present').forEach(att=>{
@@ -289,12 +348,14 @@
     
     function renderDeptOptions() {
         let opts = '<option value="">All Departments</option>'+departments.map(d=>`<option value="${d}">${d}</option>`).join('');
-        if(document.getElementById("filterDept")) document.getElementById("filterDept").innerHTML = opts;
         if(document.getElementById("newDept")) document.getElementById("newDept").innerHTML = departments.map(d=>`<option value="${d}">${d}</option>`).join('');
         if(document.getElementById("attDeptSelect")) document.getElementById("attDeptSelect").innerHTML = '<option value="">--Select Department--</option>'+departments.map(d=>`<option value="${d}">${d}</option>`).join('');
-        if(document.getElementById("shiftEmployee")) document.getElementById("shiftEmployee").innerHTML = '<option value="">Select</option>'+employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
         if(document.getElementById("dirDeptFilter")) document.getElementById("dirDeptFilter").innerHTML = '<option value="">All Departments</option>'+departments.map(d=>`<option value="${d}">${d}</option>`).join('');
         if(document.getElementById("deptWiseReportSelect")) document.getElementById("deptWiseReportSelect").innerHTML = '<option value="">Select Department</option>'+departments.map(d=>`<option value="${d}">${d}</option>`).join('');
+        
+        let empOptions = '<option value="">Select Employee</option>'+employees.map(e=>`<option value="${e.id}">${e.name} (${e.dept})</option>`).join('');
+        if(document.getElementById("otEmployeeSelect")) document.getElementById("otEmployeeSelect").innerHTML = empOptions;
+        if(document.getElementById("bonusEmployeeSelect")) document.getElementById("bonusEmployeeSelect").innerHTML = empOptions;
     }
     
     function renderAttendanceUI() {
@@ -323,83 +384,176 @@
         renderDashboard();
     }
     
-    // Professional PDF Generator
-    function generateProfessionalPDF(elementId, filename, isAttendance=false, deptFilter=null) {
-        let content = document.getElementById(elementId).cloneNode(true);
-        let today = getTodayStr();
-        let logoHtml = company.logo ? `<img src="${company.logo}" style="height:60px; margin-right:15px;">` : '';
+    // Add Overtime
+    function addOvertime() {
+        let empId = parseInt(document.getElementById("otEmployeeSelect").value);
+        let date = document.getElementById("otDate").value;
+        let hours = parseFloat(document.getElementById("otHours").value);
         
-        let headerHtml = `
-            <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f4a261;">
-                <div style="display: flex; align-items: center; justify-content: center;">
-                    ${logoHtml}
-                    <div>
-                        <h1 style="color: #1a4a6f; margin: 0;">${company.name}</h1>
-                        <p style="margin: 5px 0;">${company.address} | Phone: ${company.phone}</p>
-                        <p style="font-size: 12px; color: gray;">Generated: ${new Date().toLocaleString()}</p>
-                    </div>
-                </div>
-            </div>
-        `;
+        if(!empId || !date || !hours || hours <= 0) { alert("Please select employee, date and enter valid hours"); return; }
         
-        let wrapper = document.createElement('div');
-        wrapper.style.padding = "20px";
-        wrapper.style.fontFamily = "Inter, sans-serif";
-        wrapper.style.background = "white";
+        let amount = hours * overtimeRate;
+        let emp = employees.find(e=>e.id===empId);
         
-        if(isAttendance && deptFilter) {
-            let empList = employees.filter(e=>e.dept===deptFilter);
-            let tableHtml = '<h2 style="color:#1a4a6f;">Attendance Report - ' + deptFilter + ' Department</h2><h3>Date: ' + today + '</h3>';
-            tableHtml += '<table border="1" cellpadding="8" style="border-collapse: collapse; width:100%; margin-top:20px;"><thead><tr style="background:#f4a261;"><th>ID</th><th>Name</th><th>Post</th><th>Status</th><th>Check Mark</th></tr></thead><tbody>';
-            empList.forEach(emp => {
-                let isPresent = attendanceLog.some(a=>a.empId===emp.id && a.date===today && a.status==='present');
-                tableHtml += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.post}</td><td>${isPresent ? 'Present' : 'Absent'}</td><td style="text-align:center;">${isPresent ? '✓' : '✗'}</td></tr>`;
-            });
-            tableHtml += '</tbody></table>';
-            wrapper.innerHTML = headerHtml + tableHtml;
-        } else {
-            wrapper.innerHTML = headerHtml + content.innerHTML;
-        }
+        // Save to history
+        overtimeHistory.push({ empId, date, hours, amount, addedToLedger: true, empName: emp.name });
         
-        html2pdf().set({ margin: 0.5, filename: filename, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }).from(wrapper).save();
+        // Update ledger
+        updateEmployeeLedger(empId, 'overtime', amount);
+        
+        saveAll();
+        showToast(`${emp.name} got ${hours} hrs overtime = ${amount} BDT added to ledger`);
+        
+        document.getElementById("otHours").value = "";
+        renderOvertimeHistory();
+        renderLedger();
+        renderDashboard();
+        if(currentViewEmployeeId) renderEmployeeProfile(currentViewEmployeeId);
     }
     
-    function generateDeptWiseAttendancePDF() {
-        let dept = document.getElementById("deptWiseReportSelect").value;
-        if(!dept) { alert("Select a department"); return; }
-        generateProfessionalPDF('attendancePage', `${dept}_attendance_${getTodayStr()}.pdf`, true, dept);
+    // Add Bonus
+    function addBonus() {
+        let empId = parseInt(document.getElementById("bonusEmployeeSelect").value);
+        let reason = document.getElementById("bonusReason").value;
+        let amount = parseFloat(document.getElementById("bonusAmount").value);
+        
+        if(!empId || !reason || !amount || amount <= 0) { alert("Please select employee, enter reason and valid amount"); return; }
+        
+        let emp = employees.find(e=>e.id===empId);
+        
+        // Save to history
+        bonusHistory.push({ empId, date: getTodayStr(), reason, amount, addedToLedger: true, empName: emp.name });
+        
+        // Update ledger
+        updateEmployeeLedger(empId, 'bonus', amount);
+        
+        saveAll();
+        showToast(`${emp.name} got ${reason} bonus = ${amount} BDT added to ledger`);
+        
+        document.getElementById("bonusReason").value = "";
+        document.getElementById("bonusAmount").value = "";
+        renderLedger();
+        renderDashboard();
+        if(currentViewEmployeeId) renderEmployeeProfile(currentViewEmployeeId);
+    }
+    
+    function renderOvertimeHistory() {
+        let html = '<div class="table-wrapper"><table class="history-table"><thead><tr><th>Date</th><th>Employee</th><th>Hours</th><th>Amount (BDT)</th></tr></thead><tbody>';
+        overtimeHistory.slice().reverse().forEach(ot => {
+            let emp = employees.find(e=>e.id===ot.empId);
+            html += `<tr><td>${ot.date}</td><td>${emp ? emp.name : ot.empName}</td><td>${ot.hours}</td><td>${ot.amount.toLocaleString()}</td></tr>`;
+        });
+        if(overtimeHistory.length === 0) html += '<tr><td colspan="4">No overtime records yet</td></tr>';
+        html += '</tbody></table></div>';
+        document.getElementById("overtimeHistoryList").innerHTML = html;
     }
     
     function generateEmployeeProfilePDF(emp) {
         let monthAtt = attendanceLog.filter(a=>a.empId===emp.id && a.date.startsWith(getCurrentMonth())).length;
-        let shiftData = shifts.find(s=>s.empId===emp.id) || { shift: 'Not Assigned', overtime: 0 };
-        let ledger = salaryLedger.find(l=>l.empId===emp.id) || { advance: 0, paid: 0 };
-        let balance = emp.salary - ledger.advance - ledger.paid;
+        let ledger = salaryLedger.find(l=>l.empId===emp.id && l.month===getCurrentMonth()) || { advance: 0, paid: 0, bonus: 0, overtime: 0 };
+        let totalEarning = emp.salary + (ledger.bonus || 0) + (ledger.overtime || 0);
+        let balance = totalEarning - (ledger.advance || 0) - (ledger.paid || 0);
+        
+        let empOvertimeHistory = overtimeHistory.filter(ot => ot.empId === emp.id);
+        let empBonusHistory = bonusHistory.filter(b => b.empId === emp.id);
         
         let logoHtml = company.logo ? `<img src="${company.logo}" style="height:50px;">` : '';
         let html = `
-            <div style="text-align:center; margin-bottom:20px;">${logoHtml}<h2 style="color:#1a4a6f;">${company.name}</h2><p>Employee Profile</p><hr></div>
+            <div style="text-align:center; margin-bottom:20px;">${logoHtml}<h2 style="color:#1a4a6f;">${company.name}</h2><p>Employee Profile & Financial Statement</p><hr></div>
             <div style="display:flex; gap:20px; margin-bottom:20px;">
                 <img src="${emp.photo || 'https://via.placeholder.com/120'}" style="width:120px; height:120px; border-radius:50%;">
                 <div><h1>${emp.name}</h1><p><strong>ID:</strong> ${emp.id}</p><p><strong>Department:</strong> ${emp.dept}</p><p><strong>Post:</strong> ${emp.post}</p></div>
             </div>
+            <h3>Personal Information</h3>
             <table style="width:100%; border-collapse:collapse;">
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Phone</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.phone}</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Phone</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.phone || 'N/A'}</td></tr>
                 <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Bank Account</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.bankAccount || 'N/A'}</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Address</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.address}</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Salary</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.salary.toLocaleString()} BDT</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Shift</strong></td><td style="padding:8px; border:1px solid #ddd;">${shiftData.shift}</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Overtime (hrs)</strong></td><td style="padding:8px; border:1px solid #ddd;">${shiftData.overtime || 0}</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Advance Taken</strong></td><td style="padding:8px; border:1px solid #ddd;">${ledger.advance.toLocaleString()} BDT</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Paid This Month</strong></td><td style="padding:8px; border:1px solid #ddd;">${ledger.paid.toLocaleString()} BDT</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Balance</strong></td><td style="padding:8px; border:1px solid #ddd;">${balance.toLocaleString()} BDT</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Address</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.address || 'N/A'}</td></tr>
+            </table>
+            <h3 style="margin-top:20px;">Salary Statement - ${getCurrentMonth()}</h3>
+            <table style="width:100%; border-collapse:collapse;">
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Base Salary</strong></td><td style="padding:8px; border:1px solid #ddd;">${emp.salary.toLocaleString()} BDT</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Overtime</strong></td><td style="padding:8px; border:1px solid #ddd;">${(ledger.overtime || 0).toLocaleString()} BDT</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Bonus</strong></td><td style="padding:8px; border:1px solid #ddd;">${(ledger.bonus || 0).toLocaleString()} BDT</td></tr>
+                <tr style="background:#f4a26120;"><td style="padding:8px; border:1px solid #ddd;"><strong>Total Earning</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>${totalEarning.toLocaleString()} BDT</strong></td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Advance Taken</strong></td><td style="padding:8px; border:1px solid #ddd;">${(ledger.advance || 0).toLocaleString()} BDT</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Paid This Month</strong></td><td style="padding:8px; border:1px solid #ddd;">${(ledger.paid || 0).toLocaleString()} BDT</td></tr>
+                <tr style="background:#2a9d8f20;"><td style="padding:8px; border:1px solid #ddd;"><strong>Balance</strong></td><td style="padding:8px; border:1px solid #ddd;"><strong>${balance.toLocaleString()} BDT</strong></td></tr>
                 <tr><td style="padding:8px; border:1px solid #ddd;"><strong>Attendance (This Month)</strong></td><td style="padding:8px; border:1px solid #ddd;">${monthAtt} days</td></tr>
             </table>
-            <p style="margin-top:20px; text-align:center; font-size:10px;">Generated by Kite Manager Pro</p>
+            <h3 style="margin-top:20px;">Overtime History</h3>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Date</th><th>Hours</th><th>Amount</th></tr></thead>
+                <tbody>${empOvertimeHistory.map(ot => `<tr><td>${ot.date}</td><td>${ot.hours}</td><td>${ot.amount.toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3">No overtime records</td></tr>'}</tbody>
+            </table>
+            <h3 style="margin-top:20px;">Bonus History</h3>
+            <table style="width:100%; border-collapse:collapse;">
+                <thead><tr><th>Date</th><th>Reason</th><th>Amount</th></tr></thead>
+                <tbody>${empBonusHistory.map(b => `<tr><td>${b.date}</td><td>${b.reason}</td><td>${b.amount.toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3">No bonus records</td></tr>'}</tbody>
+            </table>
+            <p style="margin-top:20px; text-align:center; font-size:10px;">Generated by Kite Manager Pro v4</p>
         `;
         let wrapper = document.createElement('div');
         wrapper.innerHTML = html;
-        html2pdf().set({ margin: 0.5, filename: `${emp.name}_profile.pdf`, jsPDF: { unit: 'in', format: 'a4' } }).from(wrapper).save();
+        html2pdf().set({ margin: 0.5, filename: `${emp.name}_full_statement.pdf`, jsPDF: { unit: 'in', format: 'a4' } }).from(wrapper).save();
+    }
+    
+    function generateEmployeeProfileHTML(emp) {
+        let monthAtt = attendanceLog.filter(a=>a.empId===emp.id && a.date.startsWith(getCurrentMonth())).length;
+        let ledger = salaryLedger.find(l=>l.empId===emp.id && l.month===getCurrentMonth()) || { advance: 0, paid: 0, bonus: 0, overtime: 0 };
+        let totalEarning = emp.salary + (ledger.bonus || 0) + (ledger.overtime || 0);
+        let balance = totalEarning - (ledger.advance || 0) - (ledger.paid || 0);
+        let empOvertimeHistory = overtimeHistory.filter(ot => ot.empId === emp.id);
+        let empBonusHistory = bonusHistory.filter(b => b.empId === emp.id);
+        
+        return `
+            <div class="profile-header">
+                <img src="${emp.photo || 'https://via.placeholder.com/100'}" class="profile-pic" style="width:100px;height:100px;">
+                <div><h2>${emp.name}</h2><p>ID: ${emp.id} | ${emp.dept} | ${emp.post}</p></div>
+                <button id="editProfileBtn" class="btn-sm"><i class="fas fa-edit"></i> Edit Profile</button>
+                <button id="downloadProfilePDFBtn" class="btn-sm btn-success"><i class="fas fa-download"></i> Download Full Statement</button>
+            </div>
+            <div id="profileViewMode">
+                <h3>Personal Information</h3>
+                <table style="width:100%">${emp.phone ? `<tr><td><strong>Phone</strong></td><td>${emp.phone}</td></tr>` : ''}
+                ${emp.bankAccount ? `<tr><td><strong>Bank Account</strong></td><td>${emp.bankAccount}</td></tr>` : ''}
+                ${emp.address ? `<tr><td><strong>Address</strong></td><td>${emp.address}</td></tr>` : ''}</table>
+                
+                <h3 style="margin-top:20px;">Salary Statement - ${getCurrentMonth()}</h3>
+                <table style="width:100%">
+                    <tr><td><strong>Base Salary</strong></td><td>${emp.salary.toLocaleString()} BDT</td></tr>
+                    <tr><td><strong>Overtime</strong></td><td>${(ledger.overtime || 0).toLocaleString()} BDT</td></tr>
+                    <tr><td><strong>Bonus</strong></td><td>${(ledger.bonus || 0).toLocaleString()} BDT</td></tr>
+                    <tr style="background:var(--secondary)20;"><td><strong>Total Earning</strong></td><td><strong>${totalEarning.toLocaleString()} BDT</strong></td></tr>
+                    <tr><td><strong>Advance Taken</strong></td><td>${(ledger.advance || 0).toLocaleString()} BDT</td></tr>
+                    <tr><td><strong>Paid This Month</strong></td><td>${(ledger.paid || 0).toLocaleString()} BDT</td></tr>
+                    <tr style="background:var(--success)20;"><td><strong>Balance (Payable)</strong></td><td><strong>${balance.toLocaleString()} BDT</strong></td></tr>
+                    <tr><td><strong>Attendance (This Month)</strong></td><td>${monthAtt} days</td></tr>
+                </table>
+                
+                <h3 style="margin-top:20px;">Overtime History</h3>
+                <table class="history-table"><thead><tr><th>Date</th><th>Hours</th><th>Amount</th></tr></thead><tbody>
+                ${empOvertimeHistory.map(ot => `<tr><td>${ot.date}</td><td>${ot.hours}</td><td>${ot.amount.toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3">No overtime records</td></tr>'}
+                </tbody></table>
+                
+                <h3 style="margin-top:20px;">Bonus History</h3>
+                <table class="history-table"><thead><tr><th>Date</th><th>Reason</th><th>Amount</th></tr></thead><tbody>
+                ${empBonusHistory.map(b => `<tr><td>${b.date}</td><td>${b.reason}</td><td>${b.amount.toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3">No bonus records</td></tr>'}
+                </tbody></table>
+            </div>
+            <div id="profileEditMode" style="display:none;">
+                <input type="text" id="editName" value="${emp.name}">
+                <select id="editDept">${departments.map(d=>`<option ${d===emp.dept?'selected':''}>${d}</option>`).join('')}</select>
+                <input type="text" id="editPost" value="${emp.post}">
+                <input type="number" id="editSalary" value="${emp.salary}">
+                <input type="text" id="editPhone" value="${emp.phone || ''}">
+                <input type="text" id="editBankAccount" value="${emp.bankAccount || ''}">
+                <textarea id="editAddress">${emp.address || ''}</textarea>
+                <input type="file" id="editPhoto" accept="image/*">
+                <button id="saveProfileEditBtn" class="btn-success">Save Changes</button>
+                <button id="cancelEditBtn">Cancel</button>
+            </div>
+        `;
     }
     
     function generateEmployeeId() { let max = employees.reduce((m,e)=>Math.max(m,e.id),1000); return max+1; }
@@ -417,11 +571,11 @@
         let photoUrl = photoFile ? URL.createObjectURL(photoFile) : "";
         let newId = generateEmployeeId();
         employees.push({ id: newId, name, dept, post, salary, phone, bankAccount, address, photo: photoUrl });
-        salaryLedger.push({ empId: newId, advance: 0, paid: 0, month: getCurrentMonth() });
+        salaryLedger.push({ empId: newId, advance: 0, paid: 0, bonus: 0, overtime: 0, month: getCurrentMonth() });
         saveAll();
         showToast(`Employee added. ID: ${newId}`);
         document.getElementById("newName").value=""; document.getElementById("newPost").value=""; document.getElementById("newSalary").value=""; document.getElementById("newBankAccount").value="";
-        renderEmployeeDirectory(); renderDashboard(); renderDeptOptions(); renderLedger(); renderShiftList();
+        renderEmployeeDirectory(); renderDashboard(); renderDeptOptions(); renderLedger();
     }
     
     function renderEmployeeDirectory() {
@@ -448,46 +602,7 @@
     function renderEmployeeProfile(empId) {
         let emp = employees.find(e=>e.id===empId);
         if(!emp) return;
-        let monthAtt = attendanceLog.filter(a=>a.empId===emp.id && a.date.startsWith(getCurrentMonth())).length;
-        let shiftData = shifts.find(s=>s.empId===emp.id) || { shift: 'Not Assigned', overtime: 0 };
-        let ledger = salaryLedger.find(l=>l.empId===emp.id) || { advance: 0, paid: 0 };
-        let balance = emp.salary - ledger.advance - ledger.paid;
-        
-        let html = `
-            <div class="profile-header">
-                <img src="${emp.photo || 'https://via.placeholder.com/100'}" class="profile-pic" style="width:100px;height:100px;">
-                <div><h2>${emp.name}</h2><p>ID: ${emp.id} | ${emp.dept} | ${emp.post}</p></div>
-                <button id="editProfileBtn" class="btn-sm"><i class="fas fa-edit"></i> Edit Profile</button>
-                <button id="downloadProfilePDFBtn" class="btn-sm btn-success"><i class="fas fa-download"></i> Download PDF</button>
-            </div>
-            <div id="profileViewMode">
-                <table style="width:100%">
-                    <tr><td><strong>Phone</strong></td><td>${emp.phone || 'N/A'}</td></tr>
-                    <tr><td><strong>Bank Account</strong></td><td>${emp.bankAccount || 'N/A'}</td></tr>
-                    <tr><td><strong>Address</strong></td><td>${emp.address || 'N/A'}</td></tr>
-                    <tr><td><strong>Salary</strong></td><td>${emp.salary.toLocaleString()} BDT</td></tr>
-                    <tr><td><strong>Shift</strong></td><td>${shiftData.shift}</td></tr>
-                    <tr><td><strong>Overtime Hours</strong></td><td>${shiftData.overtime || 0}</td></tr>
-                    <tr><td><strong>Advance Taken</strong></td><td>${ledger.advance.toLocaleString()} BDT</td></tr>
-                    <tr><td><strong>Paid This Month</strong></td><td>${ledger.paid.toLocaleString()} BDT</td></tr>
-                    <tr><td><strong>Balance</strong></td><td>${balance.toLocaleString()} BDT</td></tr>
-                    <tr><td><strong>Attendance This Month</strong></td><td>${monthAtt} days</td></tr>
-                </table>
-            </div>
-            <div id="profileEditMode" style="display:none;">
-                <input type="text" id="editName" value="${emp.name}">
-                <select id="editDept">${departments.map(d=>`<option ${d===emp.dept?'selected':''}>${d}</option>`).join('')}</select>
-                <input type="text" id="editPost" value="${emp.post}">
-                <input type="number" id="editSalary" value="${emp.salary}">
-                <input type="text" id="editPhone" value="${emp.phone || ''}">
-                <input type="text" id="editBankAccount" value="${emp.bankAccount || ''}">
-                <textarea id="editAddress">${emp.address || ''}</textarea>
-                <input type="file" id="editPhoto" accept="image/*">
-                <button id="saveProfileEditBtn" class="btn-success">Save Changes</button>
-                <button id="cancelEditBtn">Cancel</button>
-            </div>
-        `;
-        document.getElementById("employeeProfileContainer").innerHTML = html;
+        document.getElementById("employeeProfileContainer").innerHTML = generateEmployeeProfileHTML(emp);
         
         document.getElementById("editProfileBtn")?.addEventListener('click',()=>{
             document.getElementById("profileViewMode").style.display = "none";
@@ -517,15 +632,21 @@
     }
     
     function renderLedger() {
-        let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Salary</th><th>Advance</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>ID</th><th>Name</th><th>Dept</th><th>Salary</th><th>Overtime</th><th>Bonus</th><th>Advance</th><th>Paid</th><th>Balance</th><th>Actions</th></tr></thead><tbody>';
         employees.forEach(emp=>{
-            let ledger = salaryLedger.find(l=>l.empId===emp.id) || { advance:0, paid:0 };
-            let balance = emp.salary - ledger.advance - ledger.paid;
-            html += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.dept}</td><td>${emp.salary.toLocaleString()}</td>
-                     <td><input type="number" class="advanceInput" data-id="${emp.id}" value="${ledger.advance}" style="width:90px;"></td>
-                     <td><input type="number" class="paidInput" data-id="${emp.id}" value="${ledger.paid}" style="width:90px;"></td>
-                     <td class="balance">${balance.toLocaleString()}</td>
-                     <td><button class="btn-sm updateLedgerBtn" data-id="${emp.id}">Update</button></td>`;
+            let ledger = salaryLedger.find(l=>l.empId===emp.id && l.month===getCurrentMonth()) || { advance:0, paid:0, bonus:0, overtime:0 };
+            let totalEarning = emp.salary + (ledger.overtime || 0) + (ledger.bonus || 0);
+            let balance = totalEarning - (ledger.advance || 0) - (ledger.paid || 0);
+            html += `<tr>
+                <td>${emp.id}</td><td>${emp.name}</td><td>${emp.dept}</td>
+                <td>${emp.salary.toLocaleString()}</td>
+                <td>${(ledger.overtime || 0).toLocaleString()}</td>
+                <td>${(ledger.bonus || 0).toLocaleString()}</td>
+                <td><input type="number" class="advanceInput" data-id="${emp.id}" value="${ledger.advance || 0}" style="width:80px;"></td>
+                <td><input type="number" class="paidInput" data-id="${emp.id}" value="${ledger.paid || 0}" style="width:80px;"></td>
+                <td class="balance">${balance.toLocaleString()}</td>
+                <td><button class="btn-sm updateLedgerBtn" data-id="${emp.id}">Update</button></td>
+            </tr>`;
         });
         html += '</tbody></table>';
         document.getElementById("ledgerTableContainer").innerHTML = html;
@@ -533,21 +654,12 @@
             let id = parseInt(btn.dataset.id);
             let advance = parseFloat(document.querySelector(`.advanceInput[data-id="${id}"]`).value) || 0;
             let paid = parseFloat(document.querySelector(`.paidInput[data-id="${id}"]`).value) || 0;
-            let idx = salaryLedger.findIndex(l=>l.empId===id);
+            let idx = salaryLedger.findIndex(l=>l.empId===id && l.month===getCurrentMonth());
             if(idx>=0) { salaryLedger[idx].advance = advance; salaryLedger[idx].paid = paid; }
-            else salaryLedger.push({ empId: id, advance, paid, month: getCurrentMonth() });
+            else salaryLedger.push({ empId: id, advance, paid, bonus:0, overtime:0, month: getCurrentMonth() });
             saveAll(); renderLedger(); showToast("Ledger updated");
+            if(currentViewEmployeeId) renderEmployeeProfile(currentViewEmployeeId);
         }));
-    }
-    
-    function renderShiftList() {
-        let html = '<h4>Current Shifts</h4><div class="table-wrapper"><table><thead><tr><th>Employee</th><th>Shift</th><th>Overtime (hrs)</th></tr></thead><tbody>';
-        employees.forEach(emp=>{
-            let s = shifts.find(sh=>sh.empId===emp.id) || { shift: 'Not Set', overtime: 0 };
-            html += `<tr><td>${emp.name}</td><td>${s.shift}</td><td>${s.overtime}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        document.getElementById("shiftListContainer").innerHTML = html;
     }
     
     function renderNotices() {
@@ -588,6 +700,39 @@
         saveAll(); showToast("Profile Saved!");
     }
     
+    // Professional PDF Generator
+    function generateProfessionalPDF(elementId, filename, isAttendance=false, deptFilter=null) {
+        let content = document.getElementById(elementId).cloneNode(true);
+        let logoHtml = company.logo ? `<img src="${company.logo}" style="height:60px; margin-right:15px;">` : '';
+        let headerHtml = `<div style="text-align:center; margin-bottom:30px; padding-bottom:20px; border-bottom:2px solid #f4a261;"><div style="display:flex; align-items:center; justify-content:center;">${logoHtml}<div><h1 style="color:#1a4a6f;">${company.name}</h1><p>${company.address} | Phone: ${company.phone}</p><p>Generated: ${new Date().toLocaleString()}</p></div></div></div>`;
+        let wrapper = document.createElement('div');
+        wrapper.style.padding = "20px";
+        wrapper.style.fontFamily = "Inter, sans-serif";
+        wrapper.style.background = "white";
+        
+        if(isAttendance && deptFilter) {
+            let empList = employees.filter(e=>e.dept===deptFilter);
+            let today = getTodayStr();
+            let tableHtml = '<h2 style="color:#1a4a6f;">Attendance Report - ' + deptFilter + ' Department</h2><h3>Date: ' + today + '</h3>';
+            tableHtml += '<table border="1" cellpadding="8" style="border-collapse:collapse; width:100%; margin-top:20px;"><thead><tr style="background:#f4a261;"><th>ID</th><th>Name</th><th>Post</th><th>Status</th><th>✓ Mark</th></tr></thead><tbody>';
+            empList.forEach(emp => {
+                let isPresent = attendanceLog.some(a=>a.empId===emp.id && a.date===today && a.status==='present');
+                tableHtml += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.post}</td><td>${isPresent ? 'Present' : 'Absent'}</td><td style="text-align:center;">${isPresent ? '✓' : '✗'}</td></tr>`;
+            });
+            tableHtml += '</tbody></table>';
+            wrapper.innerHTML = headerHtml + tableHtml;
+        } else {
+            wrapper.innerHTML = headerHtml + content.innerHTML;
+        }
+        html2pdf().set({ margin: 0.5, filename: filename, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } }).from(wrapper).save();
+    }
+    
+    function generateDeptWiseAttendancePDF() {
+        let dept = document.getElementById("deptWiseReportSelect").value;
+        if(!dept) { alert("Select a department"); return; }
+        generateProfessionalPDF('attendancePage', `${dept}_attendance_${getTodayStr()}.pdf`, true, dept);
+    }
+    
     function showPage(pageId) {
         document.querySelectorAll('.page').forEach(p=>p.classList.remove('active-page'));
         document.getElementById(pageId+"Page").classList.add('active-page');
@@ -598,7 +743,7 @@
         if(pageId==='companyProfile') loadCompanyProfile();
         if(pageId==='attendance') { renderDeptOptions(); renderAttendanceUI(); }
         if(pageId==='ledger') renderLedger();
-        if(pageId==='shift') { renderDeptOptions(); renderShiftList(); }
+        if(pageId==='overtime') { renderDeptOptions(); renderOvertimeHistory(); document.getElementById("overtimeRate").value = overtimeRate; }
         if(pageId==='notice') renderNotices();
         document.getElementById("pageTitle").innerHTML = pageId.replace(/([A-Z])/g, ' $1').trim();
     }
@@ -613,7 +758,7 @@
     });
     document.getElementById("doLogin").onclick = ()=>{
         let u = document.getElementById("loginUser").value, p = document.getElementById("loginPass").value;
-        if(u==="admin" && p==="1234") { document.getElementById("loginOverlay").style.display = "none"; document.getElementById("app").style.display = "block"; loadData(); renderDeptOptions(); renderDashboard(); renderEmployeeDirectory(); renderLedger(); renderShiftList(); renderNotices(); showPage('dashboard'); }
+        if(u==="admin" && p==="1234") { document.getElementById("loginOverlay").style.display = "none"; document.getElementById("app").style.display = "block"; loadData(); renderDeptOptions(); renderDashboard(); renderEmployeeDirectory(); renderLedger(); renderNotices(); showPage('dashboard'); }
         else alert("Wrong credentials");
     };
     document.getElementById("addDeptBtn")?.addEventListener('click',()=>{ let nd = document.getElementById("newDeptName").value.trim(); if(nd && !departments.includes(nd)) { departments.push(nd); saveAll(); renderDeptList(); renderDeptOptions(); showToast("Dept added"); } });
@@ -623,15 +768,12 @@
     document.getElementById("dirDeptFilter")?.addEventListener('change',()=>renderEmployeeDirectory());
     document.getElementById("dirSearch")?.addEventListener('keyup',()=>renderEmployeeDirectory());
     document.getElementById("saveCompanyProfileBtn")?.addEventListener('click',saveCompanyProfile);
-    document.getElementById("saveShiftBtn")?.addEventListener('click',()=>{
-        let empId = parseInt(document.getElementById("shiftEmployee").value);
-        let shift = document.getElementById("shiftType").value;
-        let ot = parseInt(document.getElementById("overtimeHours").value) || 0;
-        if(!empId) { alert("Select employee"); return; }
-        let idx = shifts.findIndex(s=>s.empId===empId);
-        if(idx>=0) { shifts[idx].shift = shift; shifts[idx].overtime = ot; }
-        else shifts.push({ empId, shift, overtime: ot });
-        saveAll(); renderShiftList(); showToast("Shift & Overtime saved");
+    document.getElementById("addOvertimeBtn")?.addEventListener('click',addOvertime);
+    document.getElementById("addBonusBtn")?.addEventListener('click',addBonus);
+    document.getElementById("saveOvertimeRateBtn")?.addEventListener('click',()=>{
+        overtimeRate = parseInt(document.getElementById("overtimeRate").value);
+        saveAll();
+        showToast(`Overtime rate set to ${overtimeRate} BDT/hour`);
     });
     document.getElementById("addNoticeBtn")?.addEventListener('click',()=>{
         let title = document.getElementById("noticeTitle").value;
